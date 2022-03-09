@@ -1,0 +1,27 @@
+{
+  "name": "node-lite-db",
+  "version": "1.0.0",
+  "description": "A lightweight node database, implemented with json files, which can handle concurrent calls to the database.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "rm -rf build/ && tsc"
+  },
+  "keywords": [
+    "database",
+    "json",
+    "node",
+    "typescript",
+    "lightweight"
+  ],
+  "author": "Christian Brooks",
+  "license": "ISC",
+  "dependencies": {
+    "ts-node": "^10.5.0",
+    "typescript": "^4.5.5"
+  },
+  "devDependencies": {
+    "@tsconfig/node16": "^1.0.2"
+  }
+}
