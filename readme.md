@@ -1,3 +1,7 @@
+# node-lite-db
+
+Github: https://github.com/ChristianDBrooks/node-lite-db
+
 ## Getting Started
 
 Install package to your project.
