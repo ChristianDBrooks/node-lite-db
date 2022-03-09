@@ -5,7 +5,7 @@ let crypto = { randomUUID };
 import dbQueue from "./queue";
 
 const setupConfig = () => {
-  const messageLabel = "[json-db]";
+  const messageLabel = "[lite-db]";
   const rootDirectory = process.cwd();
   try {
     console.log(`${messageLabel} Attempting to load default config...`);
@@ -123,6 +123,7 @@ export class DocumentNode {
     return record.id;
   };
 
+  /** Add one record from the document by id */
   delete = (id: string | number, cb?: Function) => {
     const recordIndex = this.data.findIndex((record: any) => record.id == id);
     if (!cb) {
