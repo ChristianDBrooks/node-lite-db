@@ -10,34 +10,46 @@ Install package to your project.
 npm install node-lite-db
 ```
 
-Import node-db-lite and create new DocumentNode anywhere in your project.
+We recommended creating a dedicated file for initializing your database, for example a file named `database.ts`. This folder can be anywhere withing your project, however we like to create the file in the root directory.
+
+Import `node-db-lite` into your new file `database.ts`.
 
 ```typescript
-import { DocumentNode } from "node-db-lite";
-
-// First argument is the name of the document, this will directly reflect the file name in the database.
-// Second argument is the seed data to initialize the document with, if any.
-// Third argument is an optional "options" object.
-export const documentRepo = new DocumentNode("newDocument", [], {
-  generateId: true,
-});
+import { DatabaseNode, DocumentNode } from "node-db-lite";
 ```
 
-Export the DocumentNode for usage across your project.
-
-Save a new record to the created documentRepo
+and create new DatabaseNode and DocumentNode like below
 
 ```typescript
-documentRepo.save({ data: "some nice content" });
+const db = new DatabaseNode("data");
 ```
 
-To finish setting up follow the configurations below.
+When the server starts this will create your database file structure in `./data`.
 
-## Configuration
+There are 2 ways to create a new document on a database. They both accomplish the same thing, with the same return of a new DocumentNode instance with the options provided.
+
+```typescript
+// Option 1 - call document method on the db instance to create new document instance
+const doc_1 = db.document("doc_1", []);
+// Option 2 - pass the db instance as a parameter to a new document instance.
+const doc_2 = new DocumentNode("doc_2", [], db);
+```
+
+Next if we want to add something to our `doc_1` document we can call the `.save()` method on the document instance, and pass the data object we'd like to save as a new record.
+
+```typescript
+doc_1.save({ text: "lorem ipsum", numbers: [1, 2, 3, 4, 5] });
+```
+
+Congratulations you have successfully saved your first record to your database using `node-lite-db`! Be sure to checkout the documentation below for important configuration and what other cool stuff you can do with your database.
+
+## Required Configuration
 
 ### Nodemon
 
-If you are using nodemon, you need to tell nodemon to ignore your data folder. This folder by default will be created in the root directory and can be ignored by adding a `nodemon.json` file to the root directly of your project with the following configuration inside:
+If you are using nodemon, you need to tell nodemon to ignore your database paths, otherwise the watcher will restart every time you make an update to the database. These paths will be whatever you pass to any DatabaseNode instance. They can be ignored by adding a `nodemon.json` file to the root directory of your project with the paths listed inside the `ignore` property, if we want nodemon to ignore our database for the getting started example we need to add the following:
+
+##### nodemon.json
 
 ```json
 {
@@ -45,21 +57,34 @@ If you are using nodemon, you need to tell nodemon to ignore your data folder. T
 }
 ```
 
-Note: if you change the default database location in `config.d.b.json`, you will need to ignore the folder by changing the directory above.
-
 ### Database Configuration
 
-You can pass a DatabaseOptions object when creating a new database to set its configuration for all child document nodes.
+You can pass a `DatabaseOptions` object when creating a new `DatabaseNode` instance to set its configuration for all child `DocumentNodes`. The default options are below.
 
-```json
-{
-  /* Directory to create database files. */
-  "databasePath": "data",
-  /* Label used for logs generated from the database */
-  "messageLabel": "lite-db",
+##### DatabaseOptions Example
+
+```typescript
+const db_options = {
+  /* Label used for logs generated from the database instance and its children DocumentNode instances*/
+  messageLabel: "lite-db",
   /* Extension used for database files */
-  "fileExtension": ".db"
-}
+  fileExtension: ".db",
+};
+
+const db = new DatabaseNode("data", db_options);
+```
+
+You can pass a `DocumentOptions` object when creating a new `DocumentNode` instance.
+
+##### DocumentOptions
+
+```typescript
+const doc_options = {
+  /* Whether or not the document should auto generate ids for saved records */
+  generateId: true,
+};
+
+const doc = new DocumentNode("document", [], doc_options);
 ```
 
 ## DatabaseNode

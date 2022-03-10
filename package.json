@@ -28,6 +28,5 @@
     "dist",
     "package.json",
     "readme.md"
-  ],
-  "type": "module"
+  ]
 }
