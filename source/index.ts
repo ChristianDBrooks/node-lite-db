@@ -4,86 +4,93 @@ let fs = { existsSync, mkdir, readFileSync };
 let crypto = { randomUUID };
 import dbQueue from "./queue";
 
-const setupConfig = () => {
-  const messageLabel = "[lite-db]";
-  const rootDirectory = process.cwd();
-  try {
-    console.log(`${messageLabel} Attempting to load default config...`);
-    const config = require(rootDirectory + "/" + "config.db.json");
+export class DatabaseNode {
+  private path: string;
+  private messageLabel: string;
+  private fileExtension: string;
 
-    console.log(`${messageLabel} Config found in default location.`);
-    config.fileExtension = config.fileExtension || ".db";
-    config.databasePath = config.databasePath || rootDirectory + "/data/";
-    config.messageLabel = config.messageLabel || "[json-db]";
-    return config;
-  } catch (e: any) {
-    if (e.message.includes("Could not load module")) {
-      console.log(
-        `${messageLabel} Did not find config file in root directory, initialing json-db with defaults.`
-      );
-    } else {
-      console.log(e);
+  constructor(path: string, options?: DatabaseOptions) {
+    this.path = path;
+    this.messageLabel = options?.messageLabel || "[lite-db]";
+    this.fileExtension = options?.fileExtension || ".db";
+
+    /** Initialize database folder, where files will be stored. */
+    if (!fs.existsSync(path)) {
+      fs.mkdir(path, (err) => console.log(err));
     }
-    return {
-      fileExtension: ".db",
-      databasePath: rootDirectory + "/data/",
-      messageLabel,
-    };
   }
-};
-let config = setupConfig();
 
-/** Initialize database folder, where files will be stored. */
-if (!fs.existsSync(config.databasePath)) {
-  fs.mkdir(config.databasePath, (err) => console.log(err));
-}
+  getPath() {
+    return this.path;
+  }
 
-/** Prints message with custom formatting to console. */
-const log = (content: any) => {
-  return console.log(`${config.messageLabel}`, content);
-};
+  getMessageLabel() {
+    return this.messageLabel;
+  }
 
-/** Builds absolute url for document read/write location. */
-const buildDocumentUrl = (documentName: string) => {
-  return config.databasePath + documentName + config.fileExtension + ".json";
-};
+  getFileExtension() {
+    return this.fileExtension;
+  }
 
-/** Parses documentName from the absolute path of the document. */
-const parseDocumentUrl = (documentPath: string) => {
-  const documentFile = documentPath.replace(config.databasePath, "");
-  const documentName = documentPath.replace(config.fileExtension + ".json", "");
-  return documentName;
-};
-
-interface Options {
-  generateId?: boolean;
+  /** Create a new document in the database. */
+  document = (
+    documentName: string,
+    initialData: any[],
+    options?: DocumentOptions
+  ) => {
+    return new DocumentNode(documentName, initialData, this, options);
+  };
 }
 
 export class DocumentNode {
   /** Name of the document */
   documentName: string;
+  /** Name of the database the document belongs to */
+  database: DatabaseNode;
   /** The local representation of the stored document */
   private data: any[];
   /** Whether or not to automatically generateId */
   private generateId: boolean = false;
 
-  constructor(documentName: string, initialData: any[], options?: Options) {
+  constructor(
+    documentName: string,
+    initialData: any[],
+    database: DatabaseNode,
+    options?: DocumentOptions
+  ) {
     // TODO: prevent construction of multiple of the same document
     this.documentName = documentName;
+    this.database = database;
     this.data = this.restoreData(documentName, initialData);
     this.generateId = options?.generateId || false;
   }
 
+  /** Log content using the database message label */
+  log = (content: any) => {
+    return console.log(this.database.getMessageLabel(), content);
+  };
+
+  /** Builds absolute url for document read/write location. */
+  buildDocumentUrl = (documentName: string) => {
+    return (
+      this.database.getPath() +
+      documentName +
+      this.database.getFileExtension() +
+      ".json"
+    );
+  };
+
+  /** Restores data if document files already exist */
   restoreData = (documentName: string, data: any[]): any[] => {
-    let url = buildDocumentUrl(documentName);
+    let url = this.buildDocumentUrl(documentName);
     if (!fs.existsSync(url)) {
-      log(`${documentName} could not be found. Seeding data.`);
+      this.log(`${documentName} could not be found. Seeding data.`);
       this.setDocument(data);
       return data;
     }
     let rawData = fs.readFileSync(url, "utf8");
     data = JSON.parse(rawData);
-    log(`${documentName} data restored.`);
+    this.log(`${documentName} data restored.`);
     return data;
   };
 
@@ -113,8 +120,8 @@ export class DocumentNode {
   save = (record: any, cb?: Function): string => {
     if (!cb) {
       cb = () => {
-        log("Record saved:");
-        log(record);
+        this.log("Record saved:");
+        this.log(record);
       };
     }
     if (this.generateId && !record.id) record.id = crypto.randomUUID();
@@ -129,8 +136,8 @@ export class DocumentNode {
     if (!cb) {
       let record = this.data[recordIndex];
       cb = () => {
-        log("Record deleted:");
-        log(record);
+        this.log("Record deleted:");
+        this.log(record);
       };
     }
     this.data.splice(recordIndex);
@@ -144,8 +151,8 @@ export class DocumentNode {
   clear = (documentName: string, cb?: Function) => {
     if (!cb) {
       cb = () => {
-        log("Cleared data:");
-        log([]);
+        this.log("Cleared data:");
+        this.log([]);
       };
     }
     if (this.documentName == documentName) {
@@ -155,7 +162,16 @@ export class DocumentNode {
   };
 
   private setDocument = (data: any[], cb?: Function) => {
-    let path = buildDocumentUrl(this.documentName);
+    let path = this.buildDocumentUrl(this.documentName);
     dbQueue(path, data, cb);
   };
+}
+
+interface DatabaseOptions {
+  messageLabel?: string;
+  fileExtension?: string;
+}
+
+interface DocumentOptions {
+  generateId?: boolean;
 }
