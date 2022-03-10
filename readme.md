@@ -49,16 +49,12 @@ Note: if you change the default database location in `config.d.b.json`, you will
 
 ### Database Configuration
 
-You can create a `config.db.json` that node-lite-db will look for in the root directory of the project.
-
-Available config options are shown below.
-
-Generating a config file is optional and defaults will be used in place of any properties not included in a config that is found in the root directory..
+You can pass a DatabaseOptions object when creating a new database to set its configuration for all child document nodes.
 
 ```json
 {
   /* Directory to create database files. */
-  "databasePath": "./data/",
+  "databasePath": "data",
   /* Label used for logs generated from the database */
   "messageLabel": "lite-db",
   /* Extension used for database files */
@@ -66,43 +62,10 @@ Generating a config file is optional and defaults will be used in place of any p
 }
 ```
 
+## DatabaseNode
+
+DatabaseNode is used to create new database's in node-lite-db allowing you to have multiple databases if you so choose.
+
 ## DocumentNode
 
 DocumentNode is the main class used to interact with `node-lite-db`.
-
-The following properties exist on the DocumentNode class
-
-```typescript
-    /** Name of the document */
-    documentName: string;
-    /** The local representation of the
-     * stored document data, cannot be
-     * accessed directly. Use getData() on
-     * this class instead. */
-    private data;
-    /** Whether or not to automatically
-     * generateId */
-    private generateId;
-    constructor(documentName: string, initialData: any[], options?: Options);
-    restoreData: (documentName: string, data: any[]) => any[];
-    /** Retrieve first record that matches
-     * the given id */
-    getOneById: (id: number | string) => any;
-    /** Retrieve the first record in the
-     * document that passes the given test */
-    getFirstMatch: (condition: any) => any;
-    /** Retrieve all records in the document
-     * that pass the given test */
-    getAllMatches: (condition: any) => any[];
-    /** Retrieve all records in the document */
-    getAll: () => any[];
-    /** Add one new record to the document */
-    save: (record: any, cb?: Function | undefined) => string;
-    delete: (id: string | number, cb?: Function | undefined) => void;
-    /** Hard deletes all information within
-     * document.
-     * All data will be lost forever.
-     * Pass the name of the document as first parameter.
-     * This redudancy is a safety measure. */
-    clear: (documentName: string, cb?: Function | undefined) => void;
-```

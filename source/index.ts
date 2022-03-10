@@ -8,17 +8,30 @@ export class DatabaseNode {
   private path: string;
   private messageLabel: string;
   private fileExtension: string;
+  private static databases: any;
 
   constructor(path: string, options?: DatabaseOptions) {
     this.path = path;
     this.messageLabel = options?.messageLabel || "[lite-db]";
     this.fileExtension = options?.fileExtension || ".db";
 
+    /** If instance has already been created for that path, return that instance instead of creating a new one. */
+    if (path in DatabaseNode.databases) {
+      this.log(
+        "A database instance at this path already exists. Returning existing instance..."
+      );
+      return DatabaseNode.databases[path];
+    }
+
     /** Initialize database folder, where files will be stored. */
     if (!fs.existsSync(path)) {
       fs.mkdir(path, (err) => console.log(err));
     }
   }
+
+  log = (content: any) => {
+    return console.log(this.getMessageLabel(), content);
+  };
 
   getPath() {
     return this.path;
