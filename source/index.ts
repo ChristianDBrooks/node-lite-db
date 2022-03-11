@@ -5,45 +5,36 @@ let crypto = { randomUUID };
 import dbQueue from "./queue";
 
 /**
- * A module for node-lite-db API.
- * @module node-lite-db
- */
-
-/**
  * @class Represents a database connection.
- * @exports
  */
 export class DatabaseNode {
-  /** The path to the database.
-   * @property
-   */
+  /** @property path The path to the database. */
   private path: string;
-  /** The messageLabel to be used when logging.
-   * @property
-   */
+  /** @property messageLabel The messageLabel to be used when logging. */
   private messageLabel: string;
-  /** The fileExtension to be used when creating document files.
-   * @property
-   */
+  /** @property fileExtension The fileExtension to be used when creating document files. */
   private fileExtension: string;
-  /** A store of the existing database instances.
-   * @property
-   */
+  /** @property databases store of the existing database instances. */
   static databases: any = {};
 
   /**
-   * Represents a database connection
-   * @constructor
-   * @param path
-   * @param options
-   * @returns
+   * Creates a database node.
+   * @param {string} path A unique absolute path where
+   * the database documents will be written to. Root
+   * directory is identified with Node process.cwd().
+   * @param {DatabaseOptions | undefined} options Optional configuration
+   * object that overides some default database settings.
+   * @returns {DatabaseNode} A new instance of
+   * DatabaseNode. If you attempt to create a database
+   * with a path that already exists, the existing
+   * instance with that path will be return instead.
    */
   constructor(path: string, options?: DatabaseOptions) {
     this.path = path;
     this.messageLabel = options?.messageLabel || "[lite-db]";
     this.fileExtension = options?.fileExtension || ".db";
 
-    /** If instance has already been created for database path, return existing instance instead of creating a new one. */
+    // If instance has already been created for database path, return existing instance instead of creating a new one. */
     if (path in DatabaseNode.databases) {
       this.log(
         "A database instance at this path already exists. Returning existing instance..."
@@ -51,10 +42,10 @@ export class DatabaseNode {
       return DatabaseNode.databases[path];
     }
 
-    /** Push current Database instance to databases object. */
+    // Push current Database instance to databases object.
     DatabaseNode.databases[path] = this;
 
-    /** Initialize database folder, where files will be stored. */
+    // Initialize database folder, where files will be stored.
     if (!fs.existsSync(path)) {
       fs.mkdir(path, (err) => console.log(err));
     }
@@ -62,7 +53,7 @@ export class DatabaseNode {
 
   /** Logs content to the console using the databases messageLabel.
    * @function
-   * @param {any} - Content
+   * @param {any} content - The content to log.
    */
   log = (content: any) => {
     return console.log(this.getMessageLabel(), content);
@@ -90,10 +81,10 @@ export class DatabaseNode {
   }
 
   /** Create a new document in the database.
-   * @param {string} - The name of the document you want to create.
-   * @param {any[]} - An array of data that should initially be in the document. Note: This only applies to newly created documents, not restored documents.
-   * @param {DocumentOptions} - Optional configurations for the newly created DocumentNode.
-   * @returns {DatabaseNode} - A new document instance that can be used to interact with the database document.
+   * @param {string} documentName The name of the document you want to create.
+   * @param {any[]} initialData An array of data that should initially be in the document. Note: This only applies to newly created documents, not restored documents.
+   * @param {DocumentOptions | undefined} options Optional configurations for the newly created DocumentNode.
+   * @returns {DatabaseNode} A new document instance that can be used to interact with the database document.
    */
   document = (
     documentName: string,
@@ -105,18 +96,28 @@ export class DatabaseNode {
 }
 /**
  * @class Represents a document file.
- * @exports
  */
 export class DocumentNode {
   /** Name of the document */
   documentName: string;
   /** Name of the database the document belongs to */
   database: DatabaseNode;
-  /** The local representation of the stored document */
+  /** The local representation of the stored document
+   * @private
+   */
   private data: any[];
-  /** Whether or not to automatically generateId */
+  /** Whether or not the document is set to automatically generate record ids or not.
+   * @private
+   */
   private generateId: boolean = false;
 
+  /** Create a new document in the database.
+   * @param {string} documentName The name of the document you want to create.
+   * @param {any[]} initialData An array of data that should initially be in the document. Note: This only applies to newly created documents, not restored documents.
+   * @param {DatabaseNode} database The database instance of DatabaseNode you would like to create the document in.
+   * @param {DocumentOptions} options Optional configurations for the newly created DocumentNode.
+   * @returns {DocumentNode} A new document instance that can be used to interact with the database document.
+   */
   constructor(
     documentName: string,
     initialData: any[],
@@ -138,7 +139,7 @@ export class DocumentNode {
   };
 
   /** Builds absolute url for document read/write location.
-   * @param {string} - The document name you to build the url for.
+   * @param {string} - The document name to build the url for.
    * @returns {string} - The url to the document.
    */
   buildDocumentUrl = (documentName: string) => {
@@ -239,7 +240,7 @@ export class DocumentNode {
   };
 
   /** Hard deletes all information within document. All data will be lost forever.
-   * @param {string} - The name of the document to delete. This redudancy is a safety measure.
+   * @param {string} - The name of the document you are attempting to clear. This redudancy is a safety measure.
    */
   clear = (documentName: string, cb?: Function) => {
     if (!cb) {
