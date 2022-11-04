@@ -16,10 +16,10 @@ npm install node-lite-db
 
 We recommended creating a dedicated file for initializing your database, for example a file named `database.ts`. This folder can be anywhere within your project, however we like to create the file in the root directory.
 
-Import `node-db-lite` into your new file `database.ts`.
+Import `node-lite-db` into your new file `database.ts`.
 
 ```typescript
-import { DatabaseNode, DocumentNode } from "node-db-lite";
+import { DatabaseNode, DocumentNode } from "node-lite-db";
 ```
 
 and create new DatabaseNode and DocumentNode like below
